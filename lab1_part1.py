@@ -78,29 +78,13 @@ print("Last hidden state shape:", model_output.last_hidden_state.shape)
 
 # %%
 # To get a single vector for the entire text, we'll use mean pooling
-# First, get the token embeddings and attention mask
+# Since we're only processing a single sentence without batching,
+# we can simply take the mean of the token embeddings
 token_embeddings = model_output.last_hidden_state
-attention_mask = encoded_input["attention_mask"]
 
 # %%
-# Perform mean pooling - expand attention mask to same dimension as embeddings
-input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
-print("Expanded mask shape:", input_mask_expanded.shape)
-
-# %%
-# Sum the embeddings, applying the attention mask
-# The mask ensures we only consider actual tokens, not padding
-sum_embeddings = torch.sum(token_embeddings * input_mask_expanded, 1)
-print("Sum embeddings shape:", sum_embeddings.shape)
-
-# %%
-# Normalize by the sum of the mask
-sum_mask = torch.clamp(input_mask_expanded.sum(1), min=1e-9)
-print("Sum mask shape:", sum_mask.shape)
-
-# %%
-# Divide to get the mean
-final_embedding = (sum_embeddings / sum_mask).squeeze()
+# Calculate mean across the sequence dimension (dim=1)
+final_embedding = torch.mean(token_embeddings, dim=1).squeeze()
 print("Final embedding shape:", final_embedding.shape)
 
 # Convert to numpy array for easier handling
